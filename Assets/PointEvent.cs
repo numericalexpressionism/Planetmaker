@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Assets;
 using UnityEngine;
 
 class PointEvent : VoronoiEvent

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Assets;
 using UnityEngine;
 
 class BeachLineArc
@@ -9,9 +8,9 @@ class BeachLineArc
   public LinkedListNode<BeachLineArc> Right { get { return Centre.Next ?? Centre.List.First; } }
   public LinkedListNode<BeachLineArc> Centre { get; private set; }
   public CircleEvent Event { get; private set; }
-  public void SetNodes(LinkedListNode<BeachLineArc> Node)
+  public void SetNodes(LinkedListNode<BeachLineArc> node)
   {
-    Centre = Node;
+    Centre = node;
   }
   public BeachLineArc(Vector2 focus)
   {
@@ -58,11 +57,11 @@ class BeachLineArc
 
     if (right.Event != null)
     {
-      events.Enqueue(right.Event, true);
+      events.Enqueue(right.Event);
     }
     if (left.Event != null)
     {
-      events.Enqueue(left.Event, true);
+      events.Enqueue(left.Event);
     }
   }
 

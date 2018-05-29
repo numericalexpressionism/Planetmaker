@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 class PriorityQueue<TValue>: IEnumerable<TValue>
 {
@@ -10,12 +9,11 @@ class PriorityQueue<TValue>: IEnumerable<TValue>
   {
     public int Compare(float x, float y)
     {
-      const float sigma = 1.0f/4096;
-      if (x - y > sigma)
+      if (x - y > Constants.Sigma)
       {
         return 1;
       }
-      if (x - y < -sigma)
+      if (x - y < -Constants.Sigma)
       {
         return -1;
       }
@@ -34,7 +32,7 @@ class PriorityQueue<TValue>: IEnumerable<TValue>
 
   public int Count { get; private set; }
 
-  public void Enqueue(TValue value, bool fromTail = true)
+  public void Enqueue(TValue value)
   {
     Count++;
     var key = _keyFunc(value);

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Assets;
 using UnityEngine;
 
 class VoronoiGraph
@@ -83,7 +82,7 @@ class VoronoiGraph
       }
       else
       {
-        DebugHelper.DrawArc(edge.Value[0], edge.Value[1], Color.blue, 8);
+        DebugHelper.DrawArc(edge.Value[0], edge.Value[1], Color.blue, 1);
       }
     }
   }

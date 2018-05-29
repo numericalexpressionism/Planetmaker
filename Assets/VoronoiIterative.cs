@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using Assets;
 using JetBrains.Annotations;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -11,42 +8,37 @@ using Random = UnityEngine.Random;
 
 public class VoronoiIterative : MonoBehaviour
 {
-  public int PointCount = 1000;
-  private List<Vector2> points = new List<Vector2>();
+  public int pointCount = 1000;
+  private readonly List<Vector2> _points = new List<Vector2>();
   private readonly LinkedList<BeachLineArc> _beachline = new LinkedList<BeachLineArc>();
   private readonly PriorityQueue<VoronoiEvent> _eventQueue = new PriorityQueue<VoronoiEvent>(p=>p.GetLat());
 
+  private readonly Stopwatch _sw = new Stopwatch();
+
   private VoronoiGraph _result;
   private Coroutine _buildHandle;
-
-  public float lstep = 0.1f;
-  public float tstep = 0.1f;
-  public int circRes = 48;
-  public bool regenerate;
-
-  private Stopwatch sw = new Stopwatch();
 
   [UsedImplicitly]
   void OnEnable()
   {
     _result = new VoronoiGraph();
-    if (regenerate || true)
+    for (int index = 0; index < pointCount; index++)
     {
-      for (int index = 0; index < PointCount; index++)
-      {
-        points.Add(MathS.CartesianToSph(Random.onUnitSphere));
-      }
+      _points.Add(MathS.CartesianToSph(Random.onUnitSphere));
     }
-    points.Sort((p1, p2) => Comparer<float>.Default.Compare(p1.y, p2.y));
+    _sw.Start();
+    _points.Sort((p1, p2) => Comparer<float>.Default.Compare(p1.y, p2.y));
+    _sw.Stop();
 
-    Debug.LogFormat("processing {0} points", points.Count);
+    Debug.LogFormat("sorted {0} points in {1} msec", _points.Count, _sw.ElapsedMilliseconds);
 
-    foreach (var site in points)
+    foreach (var site in _points)
     {
-      _eventQueue.Enqueue(new PointEvent(site), true);
+      _eventQueue.Enqueue(new PointEvent(site));
     }
 
-    sw.Start();
+    _sw.Reset();
+    _sw.Start();
     _buildHandle = StartCoroutine(BuildVoronoi(_result));
   }
 
@@ -58,46 +50,46 @@ public class VoronoiIterative : MonoBehaviour
 
   private IEnumerator BuildVoronoi(VoronoiGraph result)
   {
+    const float dt = 1/15f; //15fps
     yield return new WaitForSeconds(0.1f);
-    float LastTime = Time.realtimeSinceStartup;
+    float lastYieldTime = Time.realtimeSinceStartup;
     while (_eventQueue.Count > 0)
     {
       var nextEvent = _eventQueue.Dequeue();
 
-      if (nextEvent._deleted)
+      if (nextEvent.IsDeleted)
       {
         continue;
       }
 
-     // nextEvent.DrawDebug();
       nextEvent.Process(_beachline, _eventQueue, result);
 
-      float passed = Time.realtimeSinceStartup - LastTime;
-      if (passed > 0.03333333f)
+      var elapsed = Time.realtimeSinceStartup - lastYieldTime;
+      if (elapsed <= dt)
       {
-        LastTime = Time.realtimeSinceStartup;
-
-        var directrixTh = nextEvent.GetLat();
-
-        if (PointCount > 10000)
-        {
-          DebugHelper.DrawGeodesic(directrixTh, Color.magenta);
-        }
-        else
-        {
-          foreach (var arc in _beachline)
-          {
-            arc.DrawDebug(directrixTh, tstep, Color.red);
-          }
-        }
-
-        yield return new WaitForSeconds(0.0f);
+        continue;
       }
-      
+      lastYieldTime = Time.realtimeSinceStartup;
+
+      var directrixTh = nextEvent.GetLat();
+
+      if (pointCount > 10000)
+      {
+        DebugHelper.DrawGeodesic(directrixTh, Color.magenta);
+      }
+      else
+      {
+        foreach (var arc in _beachline)
+        {
+          arc.DrawDebug(directrixTh, dt, Color.red);
+        }
+      }
+
+      yield return new WaitForSeconds(0.0f);
     }
     _buildHandle = null;
-    sw.Stop();
-    Debug.Log("processed in msec:"+sw.ElapsedMilliseconds);
+    _sw.Stop();
+    Debug.Log("processed in msec:"+_sw.ElapsedMilliseconds);
   }
 
   // Update is called once per frame
@@ -106,7 +98,7 @@ public class VoronoiIterative : MonoBehaviour
   {
     if (_buildHandle == null)
     {
-      foreach (var point in points)
+      foreach (var point in _points)
       {
         DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
       }
