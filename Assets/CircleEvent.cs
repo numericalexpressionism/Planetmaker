@@ -17,7 +17,7 @@ class CircleEvent : VoronoiEvent
     return center.y + r;
   }
 
-  public override void Process(LinkedList<BeachLineArc> beachLine, PriorityQueue<VoronoiEvent> events, VoronoiGraph result)
+  public override void Process(LinkedList<BeachLineArc> beachLine, PriorityQueue<VoronoiEvent> events, VoronoiEdgesList result)
   {
     if (_midArc.List == null)
     {

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -9,19 +10,24 @@ using Random = UnityEngine.Random;
 public class VoronoiIterative : MonoBehaviour
 {
   public int pointCount = 1000;
+  public float SelectorR = 12;
   private readonly List<Vector2> _points = new List<Vector2>();
   private readonly LinkedList<BeachLineArc> _beachline = new LinkedList<BeachLineArc>();
-  private readonly PriorityQueue<VoronoiEvent> _eventQueue = new PriorityQueue<VoronoiEvent>(p=>p.GetLat());
+  private readonly PriorityQueue<VoronoiEvent> _eventQueue = new PriorityQueue<VoronoiEvent>(p => p.GetLat());
 
   private readonly Stopwatch _sw = new Stopwatch();
 
-  private VoronoiGraph _result;
+  private VoronoiEdgesList _result;
+  private VoronoiGraph _graph;
+  private VoronoiNode _currentselection;
+  private List<VoronoiNode> _neighbours;
+  private int _nextSelectionIndex = 1;
   private Coroutine _buildHandle;
 
   [UsedImplicitly]
   void OnEnable()
   {
-    _result = new VoronoiGraph();
+    _result = new VoronoiEdgesList();
     for (int index = 0; index < pointCount; index++)
     {
       _points.Add(MathS.CartesianToSph(Random.onUnitSphere));
@@ -45,12 +51,12 @@ public class VoronoiIterative : MonoBehaviour
   [UsedImplicitly]
   void OnDisable()
   {
-    if(_buildHandle != null) StopCoroutine(_buildHandle);
+    if (_buildHandle != null) StopCoroutine(_buildHandle);
   }
 
-  private IEnumerator BuildVoronoi(VoronoiGraph result)
+  private IEnumerator BuildVoronoi(VoronoiEdgesList result)
   {
-    const float dt = 1/15f; //15fps
+    const float dt = 1 / 15f; //15fps
     yield return new WaitForSeconds(0.1f);
     float lastYieldTime = Time.realtimeSinceStartup;
     while (_eventQueue.Count > 0)
@@ -89,7 +95,11 @@ public class VoronoiIterative : MonoBehaviour
     }
     _buildHandle = null;
     _sw.Stop();
-    Debug.Log("processed in msec:"+_sw.ElapsedMilliseconds);
+    Debug.Log("processed in msec:" + _sw.ElapsedMilliseconds);
+
+    _graph = _result.CompileGraph();
+    _currentselection = _graph.First();
+
   }
 
   // Update is called once per frame
@@ -103,6 +113,18 @@ public class VoronoiIterative : MonoBehaviour
         DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
       }
       _result.DrawDebug();
+    }
+
+
+    if (_graph != null)
+    {
+      foreach (var value in _graph._nodes.Values)
+      {
+        foreach (var other in value.GetNeighbors())
+        {
+          DebugHelper.DrawArc(MathS.SphToCartesian(value.centre), MathS.SphToCartesian(other.centre), Color.red, 12);
+        }
+      }
     }
   }
 }

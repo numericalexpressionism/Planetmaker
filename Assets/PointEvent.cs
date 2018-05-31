@@ -15,7 +15,7 @@ class PointEvent : VoronoiEvent
     return point.y;
   }
 
-  public override void Process(LinkedList<BeachLineArc> beachLine, PriorityQueue<VoronoiEvent> events, VoronoiGraph result)
+  public override void Process(LinkedList<BeachLineArc> beachLine, PriorityQueue<VoronoiEvent> events, VoronoiEdgesList result)
   {
     float phi = point.x > 0 ? point.x : point.x + 360;
 
