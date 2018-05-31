@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public static class MathS
 {
@@ -20,31 +21,79 @@ public static class MathS
     return SphToCartesianRad(ploar.x * Mathf.Deg2Rad, ploar.y * Mathf.Deg2Rad);
   }
 
-  public static Vector3 SphToCartesian(float phi, float theta)
+  public static Vector3 SphToCartesian(double phi, double theta)
   {
-    return SphToCartesianRad(phi * Mathf.Deg2Rad, theta * Mathf.Deg2Rad);
+    return SphToCartesianRad(phi * Constants.Deg2Rad, theta * Constants.Deg2Rad);
   }
 
-  public static Vector3 SphToCartesianRad(float phi, float theta)
+  public static Vector3 SphToCartesianRad(double phi, double theta)
   {
     return new Vector3(
-      Mathf.Sin(theta) * Mathf.Cos(phi),
-      Mathf.Sin(theta) * Mathf.Sin(phi),
-      Mathf.Cos(theta)
+      (float)(Math.Sin(theta) * Math.Cos(phi)),
+      (float)(Math.Sin(theta) * Math.Sin(phi)),
+      (float)(Math.Cos(theta))
       );
   }
   public static Vector2 CartesianToSph(Vector3 c)
   {
-    return new Vector2(Mathf.Atan2(c.y, c.x) * Mathf.Rad2Deg, Mathf.Acos(c.z) * Mathf.Rad2Deg);
+    return new Vector2((float)(Math.Atan2(c.y, c.x) * Mathf.Rad2Deg), (float)(Math.Acos(c.z) * Mathf.Rad2Deg));
   }
 
   public static void CalcParabolaIntersections(Vector2 focusL, Vector2 focusR, float directrixTh, out float x1, out float x2)
   {
     CalcParabolaIntersections(focusL.y, focusR.y, directrixTh, focusL.x, focusR.x, out x1, out x2);
   }
+
+  public static float CalcLeftParabolaIntersection(Vector2 focusL, Vector2 focusR, float directrixTh)
+  {
+    return CalcLeftParabolaIntersection(focusL.y, focusR.y, directrixTh, focusL.x, focusR.x);
+  }
+
+  public static float CalcLeftParabolaIntersection(float focusTh1, float focusTh2, float directrixTh, float focusPhi1, float focusPhi2)
+  {
+    if ((Math.Abs(focusTh1 - focusTh2) < Constants.Epsilon) && (Math.Abs(focusPhi1 - focusPhi2) < Constants.Epsilon))
+    {
+      //points are equal - all ellips is intersection point
+      return focusPhi1 - 90;
+    }
+
+    if ((Math.Abs(focusTh1 - directrixTh) < Constants.Epsilon) || (Math.Abs(focusTh2 - directrixTh) < Constants.Epsilon))
+    {
+      return focusPhi1;
+    }
+
+    var eps = directrixTh * Constants.Deg2Rad;
+    var th1 = focusTh1 * Constants.Deg2Rad;
+    var th2 = focusTh2 * Constants.Deg2Rad;
+    var ph1 = focusPhi1 * Constants.Deg2Rad;
+    var ph2 = focusPhi2 * Constants.Deg2Rad;
+
+    var a = Math.Cos(th1);
+    var b = Math.Cos(th2);
+    var c = Math.Sin(th1);
+    var d = Math.Sin(th2);
+    var e = Math.Sin(ph1);
+    var f = Math.Sin(ph2);
+    var g = Math.Cos(ph1);
+    var h = Math.Cos(ph2);
+    var n = Math.Cos(eps);
+    var m = Math.Sin(eps);
+
+    var p = d * (n - a);
+    var q = c * (n - b);
+    var t = m * (b - a);
+
+    var u = p * f - q * e;
+    var v = p * h - q * g;
+
+    var s = Math.Sqrt(u * u + v * v - t * t);
+
+    return (float)(2* Math.Atan2(u + s, t + v) * Constants.Rad2Deg);
+  }
+
   public static void CalcParabolaIntersections(float focusTh1, float focusTh2, float directrixTh, float focusPhi1, float focusPhi2, out float r1, out float r2)
   {
-    if (Mathf.Approximately(focusTh1, focusTh2) && Mathf.Approximately(focusPhi1, focusPhi2))
+    if ((Math.Abs(focusTh1 - focusTh2) < Constants.Epsilon) && (Math.Abs(focusPhi1 - focusPhi2) < Constants.Epsilon))
     {
       //points are equal - all ellips is intersection point
       r1 = focusPhi1 - 90;
@@ -52,15 +101,9 @@ public static class MathS
       return;
     }
 
-    if (Mathf.Approximately(focusTh1, directrixTh))
+    if ((Math.Abs(focusTh1 - directrixTh) < Constants.Epsilon) || (Math.Abs(focusTh2 - directrixTh) < Constants.Epsilon))
     {
       r1 = r2 = focusPhi1;
-      return;
-    }
-
-    if (Mathf.Approximately(focusTh2, directrixTh))
-    {
-      r1 = r2 = focusPhi2;
       return;
     }
 
@@ -70,16 +113,16 @@ public static class MathS
     var ph1 = focusPhi1 * Mathf.Deg2Rad;
     var ph2 = focusPhi2 * Mathf.Deg2Rad;
 
-    var a = Mathf.Cos(th1);
-    var b = Mathf.Cos(th2);
-    var c = Mathf.Sin(th1);
-    var d = Mathf.Sin(th2);
-    var e = Mathf.Sin(ph1);
-    var f = Mathf.Sin(ph2);
-    var g = Mathf.Cos(ph1);
-    var h = Mathf.Cos(ph2);
-    var n = Mathf.Cos(eps);
-    var m = Mathf.Sin(eps);
+    var a = Math.Cos(th1);
+    var b = Math.Cos(th2);
+    var c = Math.Sin(th1);
+    var d = Math.Sin(th2);
+    var e = Math.Sin(ph1);
+    var f = Math.Sin(ph2);
+    var g = Math.Cos(ph1);
+    var h = Math.Cos(ph2);
+    var n = Math.Cos(eps);
+    var m = Math.Sin(eps);
 
     var p = d * (n - a);
     var q = c * (n - b);
@@ -88,18 +131,16 @@ public static class MathS
     var u = p * f - q * e;
     var v = p * h - q * g;
 
-    var s = Mathf.Sqrt(u * u + v * v - t * t);
+    var s = Math.Sqrt(u * u + v * v - t * t);
 
-    r1 = 2 * Mathf.Atan2(u + s, t + v) * Mathf.Rad2Deg;
-    r2 = 2 * Mathf.Atan2(u - s, t + v) * Mathf.Rad2Deg;
+    r1 = (float)(2 * Math.Atan2(u + s, t + v) * Constants.Rad2Deg);
+    r2 = (float)(2 * Math.Atan2(u - s, t + v) * Constants.Rad2Deg);
   }
 
   public static float ParabolaIntersectionPointFi(Vector2 l, Vector2 r, float th)
   {
-    float x1, x2;
-
     //this orders point so the intersecting one comes first
-    CalcParabolaIntersections(l, r, th, out x1, out x2);
+    float x1 = CalcLeftParabolaIntersection(l, r, th);
 
     while (x1 < 0) x1 += 360f;
     while (x1 > 360f) x1 -= 360f;
@@ -131,27 +172,27 @@ public static class MathS
     return v >= f && v < t;
   }
 
-  public static Vector3 CalcParabolaPoint(Vector2 focus, float directrixTheta, float phi)
+  public static Vector3 CalcParabolaPoint(Vector2 focus, double directrixTheta, double phi)
   {
     return CalcParabolaPoint(focus.y, focus.x, directrixTheta, phi);
   }
 
-  public static Vector3 CalcParabolaPoint(float focusTh, float focusPhi, float directrixTheta, float directrixPhi)
+  public static Vector3 CalcParabolaPoint(double focusTh, double focusPhi, double directrixTheta, double directrixPhi)
   {
     var th = CalcParabolaThetaRad(focusTh, focusPhi, directrixTheta, directrixPhi);
-    return -SphToCartesianRad(directrixPhi * Mathf.Deg2Rad, th);
+    return -SphToCartesianRad(directrixPhi * Constants.Deg2Rad, th);
   }
 
-  private static float CalcParabolaThetaRad(float focusTh, float focusPhi, float directrixTheta, float directrixPhi)
+  private static double CalcParabolaThetaRad(double focusTh, double focusPhi, double directrixTheta, double directrixPhi)
   {
-    var eps = directrixTheta * Mathf.Deg2Rad;
-    var th1 = focusTh * Mathf.Deg2Rad;
-    var ph1 = focusPhi * Mathf.Deg2Rad;
-    var phd = directrixPhi * Mathf.Deg2Rad;
+    var eps = directrixTheta * Constants.Deg2Rad;
+    var th1 = focusTh * Constants.Deg2Rad;
+    var ph1 = focusPhi * Constants.Deg2Rad;
+    var phd = directrixPhi * Constants.Deg2Rad;
 
-    var y = Mathf.Cos(eps) - Mathf.Cos(th1);
-    var x = Mathf.Sin(th1) * Mathf.Cos(phd - ph1) - Mathf.Sin(eps);
-    var th = Mathf.Atan2(y, x);
+    var y = Math.Cos(eps) - Math.Cos(th1);
+    var x = Math.Sin(th1) * Math.Cos(phd - ph1) - Math.Sin(eps);
+    var th = Math.Atan2(y, x);
     return th;
   }
 }

@@ -82,7 +82,7 @@ class VoronoiGraph
       }
       else
       {
-        DebugHelper.DrawArc(edge.Value[0], edge.Value[1], Color.blue, 1);
+        DebugHelper.DrawArc(edge.Value[0], edge.Value[1], Color.blue, 8);
       }
     }
   }

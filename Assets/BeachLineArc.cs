@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 class BeachLineArc
@@ -65,13 +66,20 @@ class BeachLineArc
     }
   }
 
+  private float LastTheta;
+  private float LeftPhiCache;
+
   public float GetLeftPhi(float directrixTh)
   {
-    if (Left == Centre)
+    if (directrixTh == LastTheta)//this should reduce our calc two times, because right phi is other arcs left phi
     {
-      return MathS.NormalizeAngle(focus.x - 180);
+      return LeftPhiCache;
     }
-    return MathS.ParabolaIntersectionPointFi(Left.Value.focus, focus, directrixTh);
+    LastTheta = directrixTh;
+    LeftPhiCache = (Left == Centre) 
+      ? (MathS.NormalizeAngle(focus.x - 180)) 
+      : MathS.ParabolaIntersectionPointFi(Left.Value.focus, focus, directrixTh);
+    return LeftPhiCache;
   }
 
   public float GetRightPhi(float directrixTh)
