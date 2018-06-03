@@ -44,6 +44,11 @@ public class VoronoiIterative : MonoBehaviour
     }
 
     _sw.Reset();
+
+    var steps = 12;
+    GetComponent<MeshFilter>().mesh = MeridianSphere.Create(0.5f, steps * 4, steps * 2 - 1);
+
+
     _sw.Start();
     _buildHandle = StartCoroutine(BuildVoronoi(_result));
   }
@@ -100,6 +105,9 @@ public class VoronoiIterative : MonoBehaviour
     _graph = _result.CompileGraph();
     _currentselection = _graph.First();
 
+    var mainTexture = new Texture2D(256, 128);
+    _graph.RenderEquirectangular(mainTexture);
+    GetComponent<MeshRenderer>().material.mainTexture = mainTexture;
   }
 
   // Update is called once per frame
@@ -110,7 +118,7 @@ public class VoronoiIterative : MonoBehaviour
     {
       foreach (var point in _points)
       {
-        DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
+        DebugHelper.DrawPoint(MathS.SphToCartesian(point), 4.1f, Color.black);
       }
       _result.DrawDebug();
     }
@@ -122,7 +130,7 @@ public class VoronoiIterative : MonoBehaviour
       {
         foreach (var other in value.GetNeighbors())
         {
-          DebugHelper.DrawArc(MathS.SphToCartesian(value.centre), MathS.SphToCartesian(other.centre), Color.red, 12);
+          //DebugHelper.DrawArc(MathS.SphToCartesian(value.centre), MathS.SphToCartesian(other.centre), Color.red, 12);
         }
       }
     }

@@ -19,4 +19,17 @@ public class VoronoiGraph
   {
     return _nodes.First().Value;
   }
+
+  public void RenderEquirectangular(Texture2D mainTexture)
+  {
+    foreach (var node in _nodes)
+    {
+      var p = node.Value.centre;
+
+      int px = Mathf.RoundToInt((1 - ((p.x+180) / 360f)) * mainTexture.width);
+      int py = Mathf.RoundToInt((1 - (p.y / 180f)) * mainTexture.height);
+      mainTexture.SetPixel(px, py, Color.red);
+    }
+    mainTexture.Apply();
+  }
 }

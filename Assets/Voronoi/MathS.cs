@@ -28,15 +28,18 @@ public static class MathS
 
   public static Vector3 SphToCartesianRad(double phi, double theta)
   {
-    return new Vector3(
+    var result = new Vector3(
       (float)(Math.Sin(theta) * Math.Cos(phi)),
-      (float)(Math.Sin(theta) * Math.Sin(phi)),
-      (float)(Math.Cos(theta))
+      (float)(Math.Cos(theta)),
+      -(float)(Math.Sin(theta) * Math.Sin(phi))
       );
+
+    return result;
   }
+
   public static Vector2 CartesianToSph(Vector3 c)
   {
-    return new Vector2((float)(Math.Atan2(c.y, c.x) * Mathf.Rad2Deg), (float)(Math.Acos(c.z) * Mathf.Rad2Deg));
+    return new Vector2((float)(Math.Atan2(-c.z, c.x) * Mathf.Rad2Deg), (float)(Math.Acos(c.y) * Mathf.Rad2Deg));
   }
 
   public static void CalcParabolaIntersections(Vector2 focusL, Vector2 focusR, float directrixTh, out float x1, out float x2)
