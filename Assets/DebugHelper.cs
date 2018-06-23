@@ -48,7 +48,7 @@ static class DebugHelper
     for (int i = 0; i < steps; i++)
     {
       var p2 = q * p1;
-      Debug.DrawLine(p1, p2, Color.Lerp(colorf,colort, i/steps), t);
+      Debug.DrawLine(p1, p2, Color.Lerp(colorf, colort, i / steps), t);
       p1 = p2;
     }
   }
@@ -63,5 +63,23 @@ static class DebugHelper
       Debug.DrawLine(p1, p2, color, t);
       p1 = p2;
     }
+  }
+
+  public static void DrawQuatArrow(Quaternion quat, Vector3 Start, float arrowSize, Color color, int n = 2, float t = 0)
+  {
+    Vector3 Axis;
+    float angle;
+    quat.ToAngleAxis(out angle, out Axis);
+    Vector3 end = quat * Start;
+
+    Quaternion ArrowHead1Q = Quaternion.AngleAxis(30, end);
+    Quaternion ArrowHead2Q = Quaternion.AngleAxis(-30, end);
+    Quaternion ArrowheadQuat = Quaternion.AngleAxis(-arrowSize, Axis);
+    Vector3 ArrowHeadEnd = ArrowheadQuat * end;
+
+    DrawArc(end, ArrowHead1Q* ArrowHeadEnd, color, 1, t);//line body
+    DrawArc(end, ArrowHead2Q* ArrowHeadEnd, color, 1, t);//line body
+
+    DrawArc(Start, end, color, n, t);//line body
   }
 }

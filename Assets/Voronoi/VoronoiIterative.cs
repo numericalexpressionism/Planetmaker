@@ -15,6 +15,8 @@ public class VoronoiIterative : MonoBehaviour
   private readonly LinkedList<BeachLineArc> _beachline = new LinkedList<BeachLineArc>();
   private readonly PriorityQueue<VoronoiEvent> _eventQueue = new PriorityQueue<VoronoiEvent>(p => p.GetLat());
 
+  private readonly List<HashSet<VoronoiNode>> clusters = new List<HashSet<VoronoiNode>>();
+
   private readonly Stopwatch _sw = new Stopwatch();
 
   private VoronoiEdgesList _result;
@@ -105,9 +107,81 @@ public class VoronoiIterative : MonoBehaviour
     _graph = _result.CompileGraph();
     _currentselection = _graph.First();
 
-    var mainTexture = new Texture2D(256, 128) {filterMode = FilterMode.Point};
+    _graph.SetValue(GetNoise);
+
+    var mainTexture = new Texture2D(256, 128) { filterMode = FilterMode.Point };
     _graph.RenderEquirectangular(mainTexture);
     GetComponent<MeshRenderer>().material.mainTexture = mainTexture;
+
+    foreach (var node in _graph._nodes)
+    {
+      clusters.Add(new HashSet<VoronoiNode>() { node.Value });
+    }
+
+    yield return new WaitForSeconds(1.0f);
+    ClusterizeStep(clusters);
+    yield return new WaitForSeconds(1.0f);
+    ClusterizeStep(clusters);
+  }
+
+  private void ClusterizeStep(List<HashSet<VoronoiNode>> list)
+  {
+    var seen = new HashSet<VoronoiNode>();
+    var ClusterizationQueue = new Dictionary<HashSet<VoronoiNode>, HashSet<VoronoiNode>>();
+    foreach (var cluster in list)
+    {
+      Vector3 ClusterMove = Vector3.zero;
+      foreach (var node in cluster)
+      {
+        ClusterMove += node.data.Velocity * MathS.SphToCartesian(node.centre) - MathS.SphToCartesian(node.centre);
+
+        foreach (var neighbor in node.GetNeighbors())
+        {
+          if (!cluster.Contains(neighbor) && !seen.Contains(neighbor))
+          {
+            seen.Add(neighbor);
+            //this is a cluster neihghbor
+            var NeighborMove = neighbor.data.Velocity * MathS.SphToCartesian(neighbor.centre) - MathS.SphToCartesian(neighbor.centre);
+            
+            var metric = Vector3.Dot(NeighborMove.normalized, ClusterMove.normalized);
+
+            if (metric > 0.5f) //angle between vectors is less than 30`
+            {
+              if (!ClusterizationQueue.ContainsKey(cluster))
+              {
+                ClusterizationQueue.Add(cluster, new HashSet<VoronoiNode>());
+              }
+              ClusterizationQueue[cluster].Add(neighbor);
+            }
+          }
+        }
+      }
+    }
+
+    foreach (var pair in ClusterizationQueue)
+    {
+      var desiredCluster = pair.Key;
+      var nodesToAddTo = pair.Value;
+
+      foreach (var cluster in list)
+      {
+        if (cluster != desiredCluster && cluster.Overlaps(nodesToAddTo) )
+        {
+          nodesToAddTo.UnionWith(cluster);
+          cluster.Clear();
+        }
+      }
+
+      list.RemoveAll(c => c.Count == 0);
+
+      desiredCluster.UnionWith(nodesToAddTo);
+    }
+  }
+
+  private NodeData GetNoise(Vector3 p)
+  {
+    float v = Random.Range(-1.0f, 1.0f);
+    return new NodeData() { Value = v };
   }
 
   // Update is called once per frame
@@ -120,18 +194,34 @@ public class VoronoiIterative : MonoBehaviour
       {
         DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
       }
-      _result.DrawDebug();
+      //_result.DrawDebug();
     }
 
+    var currentClusterEdges = new HashSet<VectorPair>();
+    foreach (var cluster in clusters)
+    {
+
+      foreach (var node in cluster)
+      {
+        currentClusterEdges.SymmetricExceptWith(node.GetEdges());
+      }
+
+      foreach (var edge in currentClusterEdges)
+      {
+        DebugHelper.DrawArc(edge._one, edge._other, Color.magenta);
+      }
+      currentClusterEdges.Clear();
+    }
 
     if (_graph != null)
     {
       foreach (var value in _graph._nodes.Values)
       {
-        foreach (var other in value.GetNeighbors())
+        foreach (var partVelocity in value.data.PartVelocities)
         {
-          //DebugHelper.DrawArc(MathS.SphToCartesian(value.centre), MathS.SphToCartesian(other.centre), Color.red, 12);
+          // DebugHelper.DrawQuatArrow(partVelocity, MathS.SphToCartesian(value.centre), 0.325f, Color.blue);
         }
+        DebugHelper.DrawQuatArrow(value.data.Velocity, MathS.SphToCartesian(value.centre), 0.325f, Color.black);
       }
     }
   }

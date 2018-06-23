@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -27,6 +28,8 @@ public class VoronoiGraph
       var p = node.Value.centre;
       var uv = GetUV(mainTexture, p);
 
+      var color = Color.Lerp(Color.red, Color.blue, node.Value.data.Value / 2.0f + 0.5f);// 
+
       int py = Mathf.FloorToInt(uv.y);
 
       float xScale = Mathf.Clamp(1.0f / Mathf.Cos((uv.y/ mainTexture.height - 0.5f) * Mathf.PI ), 1, mainTexture.width);
@@ -39,18 +42,18 @@ public class VoronoiGraph
         // wrapping happened
         for (int i = xMin; i < mainTexture.width; i++)
         {
-          mainTexture.SetPixel(i, py, Color.red);
+          mainTexture.SetPixel(i, py, color);
         }
         for (int i = 0; i < xMax; i++)
         {
-          mainTexture.SetPixel(i, py, Color.red);
+          mainTexture.SetPixel(i, py, color);
         }
       }
       else
       {
         for (int i = xMin; i < xMax; i++)
         {
-          mainTexture.SetPixel(i, py, Color.red);
+          mainTexture.SetPixel(i, py, color);
         }
         //no wrapping
       }
@@ -72,4 +75,42 @@ public class VoronoiGraph
       (1 - (latLng.y / 180f)) * mainTexture.height
       );
   }
+
+  public void SetValue(Func<Vector3, NodeData> getNoise)
+  {
+    foreach (var node in _nodes)
+    {
+      _nodes[node.Key].data = getNoise(node.Key);
+    }
+
+    foreach (var node in _nodes)
+    {
+      var current = node.Value;
+
+      List<Vector3> Outputs = new List<Vector3>();
+      foreach (var neighbor in current.GetNeighbors())
+      {
+        //ToDo: add curl from edge midpoints.
+        var Midpoint = current.GetEdgeMidpointCart(neighbor);
+        var dr = Quaternion.FromToRotation(MathS.SphToCartesian(current.centre), Midpoint);
+        var dDiv = neighbor.data.Value - current.data.Value;
+        float angle;
+        Vector3 axis;
+        dr.ToAngleAxis(out angle, out axis);
+        var partial = Quaternion.AngleAxis(angle * dDiv, axis);
+        current.data.PartVelocities.Add(partial);
+        Outputs.Add(partial* MathS.SphToCartesian(current.centre));
+      }
+      Vector3 SumMovement = Outputs.Aggregate((prev, item) => prev + item);
+      current.data.Velocity = Quaternion.FromToRotation(MathS.SphToCartesian(current.centre), SumMovement.normalized);
+    }
+  }
+}
+
+public class NodeData
+{
+  public List<Quaternion> PartVelocities = new List<Quaternion>(); //velocity
+  public Quaternion Velocity; //velocity
+  public float Value; //divirgence
+  public float Curl; //curl
 }

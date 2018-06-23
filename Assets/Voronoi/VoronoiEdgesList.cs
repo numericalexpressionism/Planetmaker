@@ -61,9 +61,9 @@ public class VoronoiEdgesList
 
 public class VectorPair
 {
-  readonly public Vector2 _one;
-  readonly public Vector2 _other;
-  public VectorPair(Vector2 one, Vector2 other)
+  readonly public Vector3 _one;
+  readonly public Vector3 _other;
+  public VectorPair(Vector3 one, Vector3 other)
   {
     _one = one;
     _other = other;

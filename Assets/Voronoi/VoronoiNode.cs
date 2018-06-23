@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class VoronoiNode
 {
-  public readonly Vector3 centre;
+  public readonly Vector2 centre;
+  public NodeData data;
   private readonly Dictionary<VoronoiNode, VectorPair> _edgeVerts;
 
   public VoronoiNode(Vector2 centre)
@@ -27,5 +28,12 @@ public class VoronoiNode
   public IEnumerable<VoronoiNode> GetNeighbors()
   {
     return _edgeVerts.Keys;
+  }
+
+  public Vector3 GetEdgeMidpointCart(VoronoiNode neighbor)
+  {
+    var edge = _edgeVerts[neighbor];
+    var result = (edge._one + edge._other).normalized;
+    return result;
   }
 }
