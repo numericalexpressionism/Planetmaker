@@ -27,9 +27,33 @@ public class VoronoiGraph
       var p = node.Value.centre;
       var uv = GetUV(mainTexture, p);
 
-      int px = Mathf.FloorToInt(uv.x);
       int py = Mathf.FloorToInt(uv.y);
-      mainTexture.SetPixel(px, py, Color.red);
+
+      float xScale = Mathf.Clamp(1.0f / Mathf.Cos((uv.y/ mainTexture.height - 0.5f) * Mathf.PI ), 1, mainTexture.width);
+
+      int xMin = Mathf.RoundToInt(uv.x - xScale / 2.0f) % mainTexture.width;
+      int xMax = Mathf.RoundToInt(uv.x + xScale / 2.0f) % mainTexture.width;
+
+      if (xMax < xMin)
+      {
+        // wrapping happened
+        for (int i = xMin; i < mainTexture.width; i++)
+        {
+          mainTexture.SetPixel(i, py, Color.red);
+        }
+        for (int i = 0; i < xMax; i++)
+        {
+          mainTexture.SetPixel(i, py, Color.red);
+        }
+      }
+      else
+      {
+        for (int i = xMin; i < xMax; i++)
+        {
+          mainTexture.SetPixel(i, py, Color.red);
+        }
+        //no wrapping
+      }
 
       var edges = node.Value.GetEdges();
       foreach (var edge in edges)

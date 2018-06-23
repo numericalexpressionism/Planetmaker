@@ -105,7 +105,7 @@ public class VoronoiIterative : MonoBehaviour
     _graph = _result.CompileGraph();
     _currentselection = _graph.First();
 
-    var mainTexture = new Texture2D(256, 128);
+    var mainTexture = new Texture2D(256, 128) {filterMode = FilterMode.Point};
     _graph.RenderEquirectangular(mainTexture);
     GetComponent<MeshRenderer>().material.mainTexture = mainTexture;
   }
@@ -118,7 +118,7 @@ public class VoronoiIterative : MonoBehaviour
     {
       foreach (var point in _points)
       {
-        DebugHelper.DrawPoint(MathS.SphToCartesian(point), 4.1f, Color.black);
+        DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
       }
       _result.DrawDebug();
     }
