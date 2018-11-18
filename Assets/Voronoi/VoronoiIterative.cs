@@ -11,6 +11,7 @@ public class VoronoiIterative : MonoBehaviour
 {
   public int pointCount = 1000;
   public float SelectorR = 12;
+  public float PlateNum = 12;
   private readonly List<Vector2> _points = new List<Vector2>();
   private readonly LinkedList<BeachLineArc> _beachline = new LinkedList<BeachLineArc>();
   private readonly PriorityQueue<VoronoiEvent> _eventQueue = new PriorityQueue<VoronoiEvent>(p => p.GetLat());
@@ -113,15 +114,54 @@ public class VoronoiIterative : MonoBehaviour
     _graph.RenderEquirectangular(mainTexture);
     GetComponent<MeshRenderer>().material.mainTexture = mainTexture;
 
-    foreach (var node in _graph._nodes)
+    HashSet<VoronoiNode> seen = new HashSet<VoronoiNode>();
+    for (int i = 0; i < PlateNum; i++)
     {
-      clusters.Add(new HashSet<VoronoiNode>() { node.Value });
+      var n = Random.Range(0, _points.Count);
+      var newCluster = new HashSet<VoronoiNode> { _graph._nodes[_points[n]] };
+      clusters.Add(newCluster);
+      seen.UnionWith(newCluster);
     }
 
-    yield return new WaitForSeconds(1.0f);
-    ClusterizeStep(clusters);
-    yield return new WaitForSeconds(1.0f);
-    ClusterizeStep(clusters);
+    for (int safe = 0; safe < 100; safe++)
+    {
+      if (seen.Count >= _points.Count)
+      {
+        Debug.Log("Done in "+safe+" steps");
+        break;
+      }
+      yield return new WaitForSeconds(0.0f);
+      ClusterizeGreedy(seen);
+    }
+   
+    
+    //
+    //foreach (var node in _graph._nodes)
+    //{
+    //  clusters.Add(new HashSet<VoronoiNode>() { node.Value });
+    //}
+
+  }
+
+  private void ClusterizeGreedy(HashSet<VoronoiNode> seen)
+  {
+    var frontiers = new Dictionary<HashSet<VoronoiNode>, HashSet<VoronoiNode>>();
+    var tmpNewNeighbors = new HashSet<VoronoiNode>();
+    foreach (var cluster in clusters)
+    {
+      frontiers[cluster] = new HashSet<VoronoiNode>(cluster);//set frontier to the one poly, each cluster has
+    }
+    foreach (var cluster in clusters)
+    {
+      tmpNewNeighbors.Clear();
+      tmpNewNeighbors.UnionWith(frontiers[cluster].SelectMany(c=>c.GetNeighbors()));
+      tmpNewNeighbors.ExceptWith(cluster);
+      tmpNewNeighbors.ExceptWith(seen);
+      frontiers[cluster].Clear();
+      frontiers[cluster].UnionWith(tmpNewNeighbors);
+      cluster.UnionWith(tmpNewNeighbors);
+      seen.UnionWith(tmpNewNeighbors);
+    }
   }
 
   private void ClusterizeStep(List<HashSet<VoronoiNode>> list)
@@ -142,7 +182,7 @@ public class VoronoiIterative : MonoBehaviour
             seen.Add(neighbor);
             //this is a cluster neihghbor
             var NeighborMove = neighbor.data.Velocity * MathS.SphToCartesian(neighbor.centre) - MathS.SphToCartesian(neighbor.centre);
-            
+
             var metric = Vector3.Dot(NeighborMove.normalized, ClusterMove.normalized);
 
             if (metric > 0.5f) //angle between vectors is less than 30`
@@ -165,7 +205,7 @@ public class VoronoiIterative : MonoBehaviour
 
       foreach (var cluster in list)
       {
-        if (cluster != desiredCluster && cluster.Overlaps(nodesToAddTo) )
+        if (cluster != desiredCluster && cluster.Overlaps(nodesToAddTo))
         {
           nodesToAddTo.UnionWith(cluster);
           cluster.Clear();
@@ -180,8 +220,10 @@ public class VoronoiIterative : MonoBehaviour
 
   private NodeData GetNoise(Vector3 p)
   {
-    float v = Random.Range(-1.0f, 1.0f);
-    return new NodeData() { Value = v };
+    var angle = Random.Range(0f, 30f) * 1.5f; //degree per 100000 y
+    var axis = Random.onUnitSphere;
+    return new NodeData();
+    //{ Velocity = Quaternion.AngleAxis(angle, axis) };
   }
 
   // Update is called once per frame
@@ -221,7 +263,7 @@ public class VoronoiIterative : MonoBehaviour
         {
           // DebugHelper.DrawQuatArrow(partVelocity, MathS.SphToCartesian(value.centre), 0.325f, Color.blue);
         }
-        DebugHelper.DrawQuatArrow(value.data.Velocity, MathS.SphToCartesian(value.centre), 0.325f, Color.black);
+        DebugHelper.DrawQuatArrow(value.data.Velocity, MathS.SphToCartesian(value.centre), 0.325f, Color.black, 6);
       }
     }
   }
