@@ -119,7 +119,7 @@ class BeachLineArc
       var p1 = MathS.CalcParabolaPoint(focus, directrixTh, f1);
       var p2 = MathS.CalcParabolaPoint(focus, directrixTh, f2);
       var c = Color.Lerp(color, color, (f1-l)/(r - l));
-      Debug.DrawLine(p1, p2, c, dt);
+      Debug.DrawLine(p1, p2, c);
     }
   }
 }

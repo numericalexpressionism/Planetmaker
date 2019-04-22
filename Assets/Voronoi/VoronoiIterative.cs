@@ -51,7 +51,6 @@ public class VoronoiIterative : MonoBehaviour
     var steps = 12;
     GetComponent<MeshFilter>().mesh = MeridianSphere.Create(0.5f, steps * 4, steps * 2 - 1);
 
-
     _sw.Start();
     _buildHandle = StartCoroutine(BuildVoronoi(_result));
   }
@@ -64,8 +63,8 @@ public class VoronoiIterative : MonoBehaviour
 
   private IEnumerator BuildVoronoi(VoronoiEdgesList result)
   {
-    const float dt = 1 / 15f; //15fps
-    yield return new WaitForSeconds(0.1f);
+    const float dt = 1;  
+    yield return new WaitForSeconds(0.0f);
     float lastYieldTime = Time.realtimeSinceStartup;
     while (_eventQueue.Count > 0)
     {
@@ -86,21 +85,10 @@ public class VoronoiIterative : MonoBehaviour
       lastYieldTime = Time.realtimeSinceStartup;
 
       var directrixTh = nextEvent.GetLat();
-
-      if (pointCount > 10000)
-      {
-        DebugHelper.DrawGeodesic(directrixTh, Color.magenta);
-      }
-      else
-      {
-        foreach (var arc in _beachline)
-        {
-          arc.DrawDebug(directrixTh, dt, Color.red);
-        }
-      }
-
+        
       yield return new WaitForSeconds(0.0f);
     }
+
     _buildHandle = null;
     _sw.Stop();
     Debug.Log("processed in msec:" + _sw.ElapsedMilliseconds);
@@ -110,29 +98,29 @@ public class VoronoiIterative : MonoBehaviour
 
     _graph.SetValue(GetNoise);
 
-    var mainTexture = new Texture2D(256, 128) { filterMode = FilterMode.Point };
-    _graph.RenderEquirectangular(mainTexture);
-    GetComponent<MeshRenderer>().material.mainTexture = mainTexture;
+    //var mainTexture = new Texture2D(256, 128) { filterMode = FilterMode.Point };
+    //_graph.RenderEquirectangular(mainTexture);
+    //GetComponent<MeshRenderer>().material.mainTexture = mainTexture;
 
-    HashSet<VoronoiNode> seen = new HashSet<VoronoiNode>();
-    for (int i = 0; i < PlateNum; i++)
-    {
-      var n = Random.Range(0, _points.Count);
-      var newCluster = new HashSet<VoronoiNode> { _graph._nodes[_points[n]] };
-      clusters.Add(newCluster);
-      seen.UnionWith(newCluster);
-    }
-
-    for (int safe = 0; safe < 100; safe++)
-    {
-      if (seen.Count >= _points.Count)
-      {
-        Debug.Log("Done in "+safe+" steps");
-        break;
-      }
-      yield return new WaitForSeconds(0.0f);
-      ClusterizeGreedy(seen);
-    }
+    //HashSet<VoronoiNode> seen = new HashSet<VoronoiNode>();
+    //for (int i = 0; i < PlateNum; i++)
+    //{
+    //  var n = Random.Range(0, _points.Count);
+    //  var newCluster = new HashSet<VoronoiNode> { _graph._nodes[_points[n]] };
+    //  clusters.Add(newCluster);
+    //  seen.UnionWith(newCluster);
+    //}
+    //
+    //for (int safe = 0; safe < 100; safe++)
+    //{
+    //  if (seen.Count >= _points.Count)
+    //  {
+    //    Debug.Log("Done in "+safe+" steps");
+    //    break;
+    //  }
+    //  yield return new WaitForSeconds(1.0f);
+    //  ClusterizeGreedy(seen);
+    //}
    
     
     //
@@ -234,9 +222,9 @@ public class VoronoiIterative : MonoBehaviour
     {
       foreach (var point in _points)
       {
-        DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
+        //DebugHelper.DrawPoint(MathS.SphToCartesian(point), 0.1f, Color.black);
       }
-      //_result.DrawDebug();
+      _result.DrawDebug();
     }
 
     var currentClusterEdges = new HashSet<VectorPair>();
@@ -257,13 +245,13 @@ public class VoronoiIterative : MonoBehaviour
 
     if (_graph != null)
     {
-      foreach (var value in _graph._nodes.Values)
+      //foreach (var value in _graph._nodes.Values)
       {
-        foreach (var partVelocity in value.data.PartVelocities)
+        //foreach (var partVelocity in value.data.PartVelocities)
         {
           // DebugHelper.DrawQuatArrow(partVelocity, MathS.SphToCartesian(value.centre), 0.325f, Color.blue);
         }
-        DebugHelper.DrawQuatArrow(value.data.Velocity, MathS.SphToCartesian(value.centre), 0.325f, Color.black, 6);
+        //DebugHelper.DrawQuatArrow(value.data.Velocity, MathS.SphToCartesian(value.centre), 0.325f, Color.black, 6);
       }
     }
   }

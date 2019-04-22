@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class VoronoiGraph
 {
-  public readonly Dictionary<Vector3, VoronoiNode> _nodes = new Dictionary<Vector3, VoronoiNode>();
+  readonly Dictionary<Vector2, VoronoiNode> _nodes = new Dictionary<Vector2, VoronoiNode>();
 
   public VoronoiNode GetOrCreateNode(Vector2 centre)
   {
